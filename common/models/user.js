@@ -592,7 +592,11 @@ module.exports = function(User) {
   User.hashPassword = function(plain) {
     this.validatePassword(plain);
     var salt = bcrypt.genSaltSync(this.settings.saltWorkFactor || SALT_WORK_FACTOR);
-    return bcrypt.hashSync(plain, salt);
+    if (salt.length < 73) {
+      return bcrypt.hashSync(plain, salt);
+    } else {
+      throw new Error('Validation Error');
+    }
   };
 
   User.validatePassword = function(plain) {
