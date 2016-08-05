@@ -564,11 +564,10 @@ module.exports = function(User) {
       return cb.promise;
     }
 
-    if ((options.password).length > MAXLENGTH) {
+    if ((options.password) && (options.password).length > MAXLENGTH) {
       var err = new Error(g.f('Password cannot exceed %j characters', MAXLENGTH));
       err.statusCode = 400;
       cb(err);
-      return cb.promise;
     }
 
     UserModel.findOne({ where: { email: options.email }}, function(err, user) {
