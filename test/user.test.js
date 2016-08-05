@@ -208,13 +208,12 @@ describe('User', function() {
     describe('Password validation with Maxlength', function() {
       var pass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt';
       var pass73 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt1';
-      var badPass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIZ';
+      var badPass = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfItXYZ1';
 
-      it('invalidates created account when password is greater than Maxlength', function(done) {
+      it('rejects passwords longer than 72 characters', function(done) {
         try {
           User.create({ email: 'b@c.com', password: pass73 }, function(err) {
             if (err) return done(err);
-            assert(err);
             assert.equal(err.statusCode, 422);
             assert(false, 'Error should have been thrown');
           });
@@ -223,7 +222,7 @@ describe('User', function() {
         }
       });
 
-      it('validates created account when password is at Maxlength', function(done) {
+      it('accepts passwords that are exactly 72 characters long', function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err, user) {
           if (err) return done(err);
           assert(user.id);
@@ -233,7 +232,7 @@ describe('User', function() {
         });
       });
 
-      it('validates login when password is at Maxlength', function(done) {
+      it('allows login with password exactly 72 characters long', function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err) {
           User.login({ email: 'b@c.com', password: pass72 }, function(err, accessToken) {
             if (err) return done(err);
@@ -246,9 +245,11 @@ describe('User', function() {
         });
       });
 
-      it('invalidates login when password is at Maxlength but wrong', function(done) {
+      it('rejects login when password is proper pass of 72 chars + extra added chars',
+      function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err) {
-          User.login({ email: 'b@c.com', password: badPass72 }, function(err) {
+          User.login({ email: 'b@c.com', password: badPass }, function(err) {
+          //  if (err) return done (err);
             assert(err && !/verified/.test(err.message),
                 'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');

@@ -247,6 +247,12 @@ module.exports = function(User) {
             debug('An error is reported from User.hasPassword: %j', err);
             fn(defaultError);
           } else if (isMatch) {
+            if ((credentials.password).length > 72) {
+              err = new Error(g.f('login failed as the password entered is too long'));
+              err.statusCode = 401;
+              err.code = 'LOGIN_FAILED';
+              fn(defaultError);
+            }
             if (self.settings.emailVerificationRequired && !user.emailVerified) {
               // Fail to log in if email verification is not done yet
               debug('User email has not been verified');
@@ -601,7 +607,7 @@ module.exports = function(User) {
       return true;
     }
     if (plain.length > MAXLENGTH) {
-      err = new Error (g.f('Invalid password exceeds maximum length'));
+      err = new Error (g.f('Password too long - maximum length is %s', MAXLEN));
       err.statusCode = 422;
       throw err;
     }
@@ -609,7 +615,6 @@ module.exports = function(User) {
     err.statusCode = 422;
     throw err;
   };
-
   /*!
    * Setup an extended user model.
    */
