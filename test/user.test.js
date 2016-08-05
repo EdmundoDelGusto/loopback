@@ -248,8 +248,8 @@ describe('User', function() {
       it('rejects login when password is proper pass of 72 chars + extra added chars',
       function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err) {
+          if (err) return done (err);
           User.login({ email: 'b@c.com', password: badPass }, function(err) {
-          //  if (err) return done (err);
             assert(err && !/verified/.test(err.message),
                 'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');
