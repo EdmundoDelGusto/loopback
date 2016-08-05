@@ -592,16 +592,18 @@ module.exports = function(User) {
   User.hashPassword = function(plain) {
     this.validatePassword(plain);
     var salt = bcrypt.genSaltSync(this.settings.saltWorkFactor || SALT_WORK_FACTOR);
-    if (salt.length < 73) {
-      return bcrypt.hashSync(plain, salt);
-    } else {
-      throw new Error('Validation Error');
-    }
+    return bcrypt.hashSync(plain, salt);
   };
 
   User.validatePassword = function(plain) {
-    if (typeof plain === 'string' && plain) {
+    var MAXLENGTH = 72;
+    if (typeof plain === 'string' && plain && plain.length <= MAXLENGTH) {
       return true;
+    }
+    if (plain.length > MAXLENGTH) {
+      err = new Error (g.f('Invalid password exceeds maximum length'));
+      err.statusCode = 422;
+      throw err;
     }
     var err =  new Error(g.f('Invalid password: %s', plain));
     err.statusCode = 422;

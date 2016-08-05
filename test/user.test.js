@@ -205,6 +205,60 @@ describe('User', function() {
       });
     });
 
+    describe('Password validation with Maxlength', function() {
+      var pass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt';
+      var pass73 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt1';
+      var badPass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIZ';
+
+      it('invalidates created account when password is greater than Maxlength', function(done) {
+        try {
+          User.create({ email: 'b@c.com', password: pass73 }, function(err) {
+            if (err) return done(err);
+            assert(err);
+            assert.equal(err.statusCode, 422);
+            assert(false, 'Error should have been thrown');
+          });
+        } catch (e) {
+          done();
+        }
+      });
+
+      it('validates created account when password is at Maxlength', function(done) {
+        User.create({ email: 'b@c.com', password: pass72 }, function(err, user) {
+          if (err) return done(err);
+          assert(user.id);
+          assert(!err);
+
+          done();
+        });
+      });
+
+      it('validates login when password is at Maxlength', function(done) {
+        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
+          User.login({ email: 'b@c.com', password: pass72 }, function(err, accessToken) {
+            if (err) return done(err);
+            assertGoodToken(accessToken);
+            assert(accessToken.id);
+            assert(!err);
+
+            done();
+          });
+        });
+      });
+
+      it('invalidates login when password is at Maxlength but wrong', function(done) {
+        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
+          User.login({ email: 'b@c.com', password: badPass72 }, function(err) {
+            assert(err && !/verified/.test(err.message),
+                'expecting "login failed" error message, received: "' + err.message + '"');
+            assert.equal(err.code, 'LOGIN_FAILED');
+
+            done();
+          });
+        });
+      });
+    });
+
     it('Hashes the given password', function() {
       var u = new User({ username: 'foo', password: 'bar' });
       assert(u.password !== 'bar');
