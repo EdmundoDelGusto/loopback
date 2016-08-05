@@ -258,6 +258,18 @@ describe('User', function() {
           });
         });
       });
+      // delete this one after .. not part of this PR
+      it('rejects password reset when password is more than 72 chars', function(done) {
+        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
+          if (err) return done (err);
+          User.resetPassword({ email: 'b@c.com', password: pass73  }, function(err) {
+            assert(err);
+            assert.equal(err.statusCode, 400);
+
+            done();
+          });
+        });
+      });
     });
 
     it('Hashes the given password', function() {

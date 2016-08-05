@@ -554,12 +554,19 @@ module.exports = function(User) {
     cb = cb || utils.createPromiseCallback();
     var UserModel = this;
     var ttl = UserModel.settings.resetPasswordTokenTTL || DEFAULT_RESET_PW_TTL;
-
+    var MAXLENGTH = 72;
     options = options || {};
     if (typeof options.email !== 'string') {
       var err = new Error(g.f('Email is required'));
       err.statusCode = 400;
       err.code = 'EMAIL_REQUIRED';
+      cb(err);
+      return cb.promise;
+    }
+
+    if ((options.password).length > MAXLENGTH) {
+      var err = new Error(g.f('Password cannot exceed %j characters', MAXLENGTH));
+      err.statusCode = 400;
       cb(err);
       return cb.promise;
     }
