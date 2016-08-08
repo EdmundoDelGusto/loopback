@@ -205,7 +205,7 @@ describe('User', function() {
       });
     });
 
-    describe('Password validation with Maxlength', function() {
+    describe('Password length validation', function() {
       var pass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt';
       var pass73 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt1';
       var badPass = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfItXYZ1';
@@ -225,10 +225,11 @@ describe('User', function() {
       it('accepts passwords that are exactly 72 characters long', function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err, user) {
           if (err) return done(err);
-          assert(user.id);
-          assert(!err);
-
-          done();
+          User.findById(user.id, function(err, userFound)  {
+            if (err) return done (err);
+            assert(userFound);
+            done();
+          });
         });
       });
 
@@ -238,8 +239,6 @@ describe('User', function() {
             if (err) return done(err);
             assertGoodToken(accessToken);
             assert(accessToken.id);
-            assert(!err);
-
             done();
           });
         });
@@ -253,12 +252,11 @@ describe('User', function() {
             assert(err && !/verified/.test(err.message),
                 'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');
-
             done();
           });
         });
       });
-      // delete this one after .. not part of this PR
+
       it('rejects password reset when password is more than 72 chars', function(done) {
         User.create({ email: 'b@c.com', password: pass72 }, function(err) {
           if (err) return done (err);

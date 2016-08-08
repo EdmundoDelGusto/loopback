@@ -14,7 +14,7 @@ var utils = require('../../lib/utils');
 var path = require('path');
 var SALT_WORK_FACTOR = 10;
 var crypto = require('crypto');
-
+var MAX_PASSWORD_LENGTH = 72;
 var bcrypt;
 try {
   // Try the native module first
@@ -247,7 +247,7 @@ module.exports = function(User) {
             debug('An error is reported from User.hasPassword: %j', err);
             fn(defaultError);
           } else if (isMatch) {
-            if ((credentials.password).length > 72) {
+            if ((credentials.password).length > MAX_PASSWORD_LENGTH) {
               err = new Error(g.f('login failed as the password entered is too long'));
               err.statusCode = 401;
               err.code = 'LOGIN_FAILED';
@@ -554,7 +554,6 @@ module.exports = function(User) {
     cb = cb || utils.createPromiseCallback();
     var UserModel = this;
     var ttl = UserModel.settings.resetPasswordTokenTTL || DEFAULT_RESET_PW_TTL;
-    var MAXLENGTH = 72;
     options = options || {};
     if (typeof options.email !== 'string') {
       var err = new Error(g.f('Email is required'));
@@ -564,8 +563,8 @@ module.exports = function(User) {
       return cb.promise;
     }
 
-    if ((options.password) && (options.password).length > MAXLENGTH) {
-      var err = new Error(g.f('Password cannot exceed %j characters', MAXLENGTH));
+    if (options.password && (options.password.length > MAX_PASSWORD_LENGTH)) {
+      var err = new Error(g.f('Password cannot exceed %j characters', MAX_PASSWORD_LENGTH));
       err.statusCode = 400;
       cb(err);
     }
@@ -608,12 +607,11 @@ module.exports = function(User) {
   };
 
   User.validatePassword = function(plain) {
-    var MAXLENGTH = 72;
-    if (typeof plain === 'string' && plain && plain.length <= MAXLENGTH) {
+    if (typeof plain === 'string' && plain && plain.length <= MAX_PASSWORD_LENGTH) {
       return true;
     }
-    if (plain.length > MAXLENGTH) {
-      err = new Error (g.f('Password too long - maximum length is %s', MAXLEN));
+    if (plain.length > MAX_PASSWORD_LENGTH) {
+      err = new Error (g.f('Password too long - maximum length is %s', MAX_PASSWORD_LENGTH));
       err.statusCode = 422;
       throw err;
     }
