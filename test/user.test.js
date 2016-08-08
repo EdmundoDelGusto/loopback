@@ -213,9 +213,8 @@ describe('User', function() {
       it('rejects passwords longer than 72 characters', function(done) {
         try {
           User.create({ email: 'b@c.com', password: pass73 }, function(err) {
-            if (err) return done(err);
-            assert.equal(err.statusCode, 422);
-            assert(false, 'Error should have been thrown');
+            should.exist(err);
+            expect(err).to.have.property('message', /Password too long/);
           });
         } catch (e) {
           done();
@@ -252,7 +251,6 @@ describe('User', function() {
             assert(err && !/verified/.test(err.message),
                 'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');
-            console.log(err);
             done();
           });
         });
