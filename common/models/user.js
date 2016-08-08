@@ -247,10 +247,10 @@ module.exports = function(User) {
             debug('An error is reported from User.hasPassword: %j', err);
             fn(defaultError);
           } else if (isMatch) {
-            if ((credentials.password).length > MAX_PASSWORD_LENGTH) {
-              err = new Error(g.f('login failed as the password entered is too long'));
-              err.statusCode = 401;
-              err.code = 'LOGIN_FAILED';
+            // Only check password length after we run the same code we would execute
+           // for a password with a valid length. This should prevent attackers from guessing
+           // the maximum allowed password length by measuring the response time.
+            if (credentials.password.length > MAX_PASSWORD_LENGTH) {
               fn(defaultError);
             }
             if (self.settings.emailVerificationRequired && !user.emailVerified) {
@@ -563,9 +563,10 @@ module.exports = function(User) {
       return cb.promise;
     }
 
-    if (options.password && (options.password.length > MAX_PASSWORD_LENGTH)) {
+    if (options.password && options.password.length > MAX_PASSWORD_LENGTH) {
       var err = new Error(g.f('Password cannot exceed %j characters', MAX_PASSWORD_LENGTH));
       err.statusCode = 400;
+      err.code = 'PASSWORD_TOO_LONG';
       cb(err);
     }
 
@@ -607,11 +608,11 @@ module.exports = function(User) {
   };
 
   User.validatePassword = function(plain) {
-    if (typeof plain === 'string' && plain && plain.length <= MAX_PASSWORD_LENGTH) {
+    if (plain && typeof plain === 'string' && plain.length <= MAX_PASSWORD_LENGTH) {
       return true;
     }
     if (plain.length > MAX_PASSWORD_LENGTH) {
-      err = new Error (g.f('Password too long - maximum length is %s', MAX_PASSWORD_LENGTH));
+      err = new Error (g.f('Password too long: %s', plain));
       err.statusCode = 422;
       throw err;
     }

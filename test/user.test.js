@@ -252,6 +252,7 @@ describe('User', function() {
             assert(err && !/verified/.test(err.message),
                 'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');
+            console.log(err);
             done();
           });
         });
