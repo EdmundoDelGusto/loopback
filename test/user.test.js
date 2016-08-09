@@ -213,9 +213,18 @@ describe('User', function() {
       it('rejects passwords longer than 72 characters', function(done) {
         try {
           User.create({ email: 'b@c.com', password: pass73 }, function(err) {
-            should.exist(err);
+            if (err) return done (err);
             expect(err).to.have.property('message', /Password too long/);
           });
+        } catch (e) {
+          done();
+        }
+      });
+
+      it('rejects a new user with password longer than 72 characters', function(done) {
+        try {
+          var u = new User({ username: 'foo', password: pass73 });
+          assert(false, 'Error should have been thrown');
         } catch (e) {
           done();
         }
