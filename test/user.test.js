@@ -257,8 +257,9 @@ describe('User', function() {
         User.create({ email: 'b@c.com', password: pass72 }, function(err) {
           if (err) return done (err);
           User.login({ email: 'b@c.com', password: badPass }, function(err) {
-            assert(err && !/verified/.test(err.message),
-                'expecting "login failed" error message, received: "' + err.message + '"');
+            assert(err);
+            assert(!/verified/.test(err.message),
+              'expecting "login failed" error message, received: "' + err.message + '"');
             assert.equal(err.code, 'LOGIN_FAILED');
             done();
           });
@@ -750,6 +751,22 @@ describe('User', function() {
 
           done();
         });
+    });
+
+    it('allows login with password too long but created in old LB version',
+    function(done) {
+      var bcrypt = require('bcryptjs');
+      var longPassword = new Array(80).join('x');
+      var oldHash = bcrypt.hashSync(longPassword, bcrypt.genSaltSync(1));
+
+      User.create({ email: 'b@c.com', password: oldHash }, function(err) {
+        if (err) return done(err);
+        User.login({ email: 'b@c.com', password: longPassword }, function(err) {
+          if (err) return done(err);
+          // we are logged in, the test passed
+          done();
+        });
+      });
     });
   });
 

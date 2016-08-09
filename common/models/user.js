@@ -247,12 +247,6 @@ module.exports = function(User) {
             debug('An error is reported from User.hasPassword: %j', err);
             fn(defaultError);
           } else if (isMatch) {
-            // Only check password length after we run the same code we would execute
-           // for a password with a valid length. This should prevent attackers from guessing
-           // the maximum allowed password length by measuring the response time.
-            if (credentials.password.length > MAX_PASSWORD_LENGTH) {
-              fn(defaultError);
-            }
             if (self.settings.emailVerificationRequired && !user.emailVerified) {
               // Fail to log in if email verification is not done yet
               debug('User email has not been verified');
@@ -336,8 +330,24 @@ module.exports = function(User) {
   User.prototype.hasPassword = function(plain, fn) {
     fn = fn || utils.createPromiseCallback();
     if (this.password && plain) {
-      bcrypt.compare(plain, this.password, function(err, isMatch) {
+      var hashed = this.password;
+      var lengthWasValidated = false;
+      if (/^\$72\$/.test(hashed) && hashed.length === 60) {
+        hashed = '$2a$'.concat(hashed.slice(4));
+        lengthWasValidated = true;
+      }
+      bcrypt.compare(plain, hashed, function(err, isMatch) {
         if (err) return fn(err);
+
+        // Only check password length after we run the same code we would execute
+        // for a password with a valid length. This should prevent attackers from guessing
+        // the maximum allowed password length by measuring the response time.
+        if (plain.length > MAX_PASSWORD_LENGTH && lengthWasValidated) {
+          // Reject too long password only if we are sure that the real
+          // password is at most 72 chars long.
+          fn(null, false);
+        }
+
         fn(null, isMatch);
       });
     } else {
@@ -604,7 +614,13 @@ module.exports = function(User) {
   User.hashPassword = function(plain) {
     this.validatePassword(plain);
     var salt = bcrypt.genSaltSync(this.settings.saltWorkFactor || SALT_WORK_FACTOR);
-    return bcrypt.hashSync(plain, salt);
+    var hash = bcrypt.hashSync(plain, salt);
+    if (/^\$2a\$/.test(hash)) {
+      // change the prefix to indicate that we have verified the plain password
+      // is at most 72 chars long
+      hash = '$72$'.concat(hash.slice(4));
+    }
+    return hash;
   };
 
   User.validatePassword = function(plain) {
@@ -645,7 +661,7 @@ module.exports = function(User) {
       if (typeof plain !== 'string') {
         return;
       }
-      if (plain.indexOf('$2a$') === 0 && plain.length === 60) {
+      if (/^\$(2a|72)\$/.test(plain) && plain.length === 60) {
         // The password is already hashed. It can be the case
         // when the instance is loaded from DB
         this.$password = plain;
