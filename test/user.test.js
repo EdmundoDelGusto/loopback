@@ -205,80 +205,6 @@ describe('User', function() {
       });
     });
 
-    describe('Password length validation', function() {
-      var pass72 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt';
-      var pass73 = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfIt1';
-      var badPass = 'ThePasswordShouldNotExceedtheMaximumNumberOfcharactersAndItisInvalidIfItXYZ1';
-
-      it('rejects passwords longer than 72 characters', function(done) {
-        try {
-          User.create({ email: 'b@c.com', password: pass73 }, function(err) {
-            if (err) return done (err);
-            expect(err).to.have.property('message', /Password too long/);
-          });
-        } catch (e) {
-          done();
-        }
-      });
-
-      it('rejects a new user with password longer than 72 characters', function(done) {
-        try {
-          var u = new User({ username: 'foo', password: pass73 });
-          assert(false, 'Error should have been thrown');
-        } catch (e) {
-          done();
-        }
-      });
-
-      it('accepts passwords that are exactly 72 characters long', function(done) {
-        User.create({ email: 'b@c.com', password: pass72 }, function(err, user) {
-          if (err) return done(err);
-          User.findById(user.id, function(err, userFound)  {
-            if (err) return done (err);
-            assert(userFound);
-            done();
-          });
-        });
-      });
-
-      it('allows login with password exactly 72 characters long', function(done) {
-        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
-          User.login({ email: 'b@c.com', password: pass72 }, function(err, accessToken) {
-            if (err) return done(err);
-            assertGoodToken(accessToken);
-            assert(accessToken.id);
-            done();
-          });
-        });
-      });
-
-      it('rejects login when password is proper pass of 72 chars + extra added chars',
-      function(done) {
-        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
-          if (err) return done (err);
-          User.login({ email: 'b@c.com', password: badPass }, function(err) {
-            assert(err);
-            assert(!/verified/.test(err.message),
-              'expecting "login failed" error message, received: "' + err.message + '"');
-            assert.equal(err.code, 'LOGIN_FAILED');
-            done();
-          });
-        });
-      });
-
-      it('rejects password reset when password is more than 72 chars', function(done) {
-        User.create({ email: 'b@c.com', password: pass72 }, function(err) {
-          if (err) return done (err);
-          User.resetPassword({ email: 'b@c.com', password: pass73  }, function(err) {
-            assert(err);
-            assert.equal(err.statusCode, 400);
-
-            done();
-          });
-        });
-      });
-    });
-
     it('Hashes the given password', function() {
       var u = new User({ username: 'foo', password: 'bar' });
       assert(u.password !== 'bar');
@@ -434,6 +360,82 @@ describe('User', function() {
 
           done();
         });
+    });
+  });
+
+  describe('Password length validation', function() {
+    var pass72Char = new Array(73).join('a');
+    var pass73Char = new Array(74).join('a');
+    var passTooLong = pass72Char + 'WXYZ1234';
+
+    it('rejects passwords longer than 72 characters', function(done) {
+      try {
+        User.create({ email: 'b@c.com', password: pass73Char }, function(err) {
+          if (err) return done (err);
+          expect(err).to.have.property('message', /Password too long/);
+        });
+      } catch (e) {
+        done();
+      }
+    });
+
+    it('rejects a new user with password longer than 72 characters', function(done) {
+      try {
+        var u = new User({ username: 'foo', password: pass73Char });
+        assert(false, 'Error should have been thrown');
+      } catch (e) {
+        expect(e).to.match(/Error: Password too long/);
+        done();
+      }
+    });
+
+    it('accepts passwords that are exactly 72 characters long', function(done) {
+      User.create({ email: 'b@c.com', password: pass72Char }, function(err, user) {
+        if (err) return done(err);
+        User.findById(user.id, function(err, userFound)  {
+          if (err) return done (err);
+          assert(userFound);
+          done();
+        });
+      });
+    });
+
+    it('allows login with password exactly 72 characters long', function(done) {
+      User.create({ email: 'b@c.com', password: pass72Char }, function(err) {
+        if (err) return done(err);
+        User.login({ email: 'b@c.com', password: pass72Char }, function(err, accessToken) {
+          if (err) return done(err);
+          assertGoodToken(accessToken);
+          assert(accessToken.id);
+          done();
+        });
+      });
+    });
+
+    it('rejects login when password is proper pass of 72 chars + extra added chars',
+    function(done) {
+      User.create({ email: 'b@c.com', password: pass72Char }, function(err) {
+        if (err) return done (err);
+        User.login({ email: 'b@c.com', password: passTooLong }, function(err) {
+          assert(err);
+          assert(!/verified/.test(err.message),
+            'expecting "login failed" error message, received: "' + err.message + '"');
+          assert.equal(err.code, 'LOGIN_FAILED');
+          done();
+        });
+      });
+    });
+
+    it('rejects password reset when password is more than 72 chars', function(done) {
+      User.create({ email: 'b@c.com', password: pass72Char }, function(err) {
+        if (err) return done (err);
+        User.resetPassword({ email: 'b@c.com', password: pass73Char  }, function(err) {
+          assert(err);
+          assert.equal(err.statusCode, 400);
+
+          done();
+        });
+      });
     });
   });
 
