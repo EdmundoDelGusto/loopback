@@ -338,14 +338,13 @@ module.exports = function(User) {
       }
       bcrypt.compare(plain, hashed, function(err, isMatch) {
         if (err) return fn(err);
-
         // Only check password length after we run the same code we would execute
         // for a password with a valid length. This should prevent attackers from guessing
         // the maximum allowed password length by measuring the response time.
         if (plain.length > MAX_PASSWORD_LENGTH && lengthWasValidated) {
           // Reject too long password only if we are sure that the real
           // password is at most 72 chars long.
-          fn(null, false);
+          return fn(null, false);
         }
 
         fn(null, isMatch);
@@ -573,7 +572,7 @@ module.exports = function(User) {
       return cb.promise;
     }
 
-    if (options.password && options.password.length > MAX_PASSWORD_LENGTH) {
+    if (User.validatePassword && options.password.length > MAX_PASSWORD_LENGTH) {
       var err = new Error(g.f('Password cannot exceed %j characters', MAX_PASSWORD_LENGTH));
       err.statusCode = 400;
       err.code = 'PASSWORD_TOO_LONG';

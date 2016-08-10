@@ -412,6 +412,9 @@ describe('User', function() {
       });
     });
 
+    // Hashing two different passwords would generate the same result if the first 72
+    // characters are identical. A user can login with password 'B' to an account of
+    // password 'A', if ('B' = 'A'+ N characters), where 'A' is 72 characters
     it('rejects login when password is proper pass of 72 chars + extra added chars',
     function(done) {
       User.create({ email: 'b@c.com', password: pass72Char }, function(err) {
