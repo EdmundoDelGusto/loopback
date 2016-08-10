@@ -441,7 +441,6 @@ describe('User', function() {
           expect(e).to.match(/Error: Password too long/);
           done();
         }
-
       });
     });
   });
