@@ -432,12 +432,16 @@ describe('User', function() {
     it('rejects password reset when password is more than 72 chars', function(done) {
       User.create({ email: 'b@c.com', password: pass72Char }, function(err) {
         if (err) return done (err);
-        User.resetPassword({ email: 'b@c.com', password: pass73Char  }, function(err) {
-          assert(err);
-          assert.equal(err.statusCode, 400);
-
+        try {
+          User.resetPassword({ email: 'b@c.com', password: pass73Char }, function(err) {
+            assert(err);
+            assert.equal(err.statusCode, 422);
+          });
+        } catch (e) {
+          expect(e).to.match(/Error: Password too long/);
           done();
-        });
+        }
+
       });
     });
   });

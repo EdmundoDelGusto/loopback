@@ -571,12 +571,8 @@ module.exports = function(User) {
       cb(err);
       return cb.promise;
     }
-
-    if (User.validatePassword && options.password.length > MAX_PASSWORD_LENGTH) {
-      var err = new Error(g.f('Password cannot exceed %j characters', MAX_PASSWORD_LENGTH));
-      err.statusCode = 400;
-      err.code = 'PASSWORD_TOO_LONG';
-      cb(err);
+    if (options.password && options.password.length > MAX_PASSWORD_LENGTH) {
+      this.validatePassword(options.password);
     }
 
     UserModel.findOne({ where: { email: options.email }}, function(err, user) {
@@ -629,6 +625,7 @@ module.exports = function(User) {
     if (plain.length > MAX_PASSWORD_LENGTH) {
       err = new Error (g.f('Password too long: %s', plain));
       err.statusCode = 422;
+      err.code = 'PASSWORD_TOO_LONG';
       throw err;
     }
     var err =  new Error(g.f('Invalid password: %s', plain));
