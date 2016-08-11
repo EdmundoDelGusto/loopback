@@ -375,6 +375,7 @@ describe('User', function() {
           expect(err).to.have.property('message', /Password too long/);
         });
       } catch (e) {
+        expect(e).to.match(/Password too long/);
         done();
       }
     });
@@ -764,13 +765,14 @@ describe('User', function() {
     it('allows login with password too long but created in old LB version',
     function(done) {
       var bcrypt = require('bcryptjs');
-      var longPassword = new Array(80).join('x');
+      var longPassword = new Array(80).join('a');
       var oldHash = bcrypt.hashSync(longPassword, bcrypt.genSaltSync(1));
 
       User.create({ email: 'b@c.com', password: oldHash }, function(err) {
         if (err) return done(err);
-        User.login({ email: 'b@c.com', password: longPassword }, function(err) {
+        User.login({ email: 'b@c.com', password: longPassword }, function(err, accessToken) {
           if (err) return done(err);
+          assert(accessToken.id);
           // we are logged in, the test passed
           done();
         });
