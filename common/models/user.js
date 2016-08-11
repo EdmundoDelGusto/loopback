@@ -619,16 +619,17 @@ module.exports = function(User) {
   };
 
   User.validatePassword = function(plain) {
+    var err;
     if (plain && typeof plain === 'string' && plain.length <= MAX_PASSWORD_LENGTH) {
       return true;
     }
     if (plain.length > MAX_PASSWORD_LENGTH) {
       err = new Error (g.f('Password too long: %s', plain));
-      err.statusCode = 422;
       err.code = 'PASSWORD_TOO_LONG';
-      throw err;
+    } else {
+      err =  new Error(g.f('Invalid password: %s', plain));
+      err.code = 'INVALID_PASSWORD';
     }
-    var err =  new Error(g.f('Invalid password: %s', plain));
     err.statusCode = 422;
     throw err;
   };

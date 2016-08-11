@@ -384,7 +384,7 @@ describe('User', function() {
         var u = new User({ username: 'foo', password: pass73Char });
         assert(false, 'Error should have been thrown');
       } catch (e) {
-        expect(e).to.match(/Error: Password too long/);
+        expect(e).to.match(/Password too long/);
         done();
       }
     });
