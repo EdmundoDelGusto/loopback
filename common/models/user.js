@@ -414,11 +414,7 @@ module.exports = function(User) {
       displayPort +
       options.restApiRoot +
       userModel.http.path +
-      userModel.sharedClass.findMethodByName('confirm').http.path +
-      '?uid=' +
-      options.user.id +
-      '&redirect=' +
-      options.redirect;
+      userModel.sharedClass.findMethodByName('confirm').http.path 
 
     // Email model
     var Email = options.mailer || this.constructor.email || registry.getModelByType(loopback.Email);
@@ -441,7 +437,13 @@ module.exports = function(User) {
 
     // TODO - support more verification types
     function sendEmail(user) {
-      options.verifyHref += '&token=' + user.verificationToken;
+      options.verifyHref 
+      += '?token=' 
+      + user.verificationToken
+      + '&uid=' 
+      + options.user.id 
+      + '&redirect=' 
+      + options.redirect;;
 
       options.text = options.text || 'Please verify your email by opening ' +
         'this link in a web browser:\n\t{href}';
